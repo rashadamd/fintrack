@@ -76,7 +76,7 @@ This project is built with a modern, scalable tech stack:
     -   [Provider](https://pub.dev/packages/provider) - For simple, effective state management (e.g., theme switching).
 -   **UI & Charting Packages:**
     -   `fl_chart` - For creating beautiful and interactive charts.
-    -   `animated_bottom_navigation_bar` (or your chosen package) - For a modern, intuitive navigation experience.
+    -   `google_nav_bar` - For a modern, intuitive navigation experience.
     -   `intl` - For date and number formatting.
 
 ---
@@ -97,10 +97,9 @@ Make sure you have the following tools installed on your machine:
 
 1.  **Clone the Repository**
     ```bash
-    git clone https://github.com/your-username/fintrack.git
+    git clone https://github.com/rashadamd/fintrack.git
     cd fintrack
     ```
-    <!-- TODO: Replace "your-username/fintrack.git" with your actual repository URL. -->
 
 2.  **Create and Configure a Firebase Project**
     -   Go to the [Firebase Console](https://console.firebase.google.com/) and click "Add project".
@@ -163,8 +162,8 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## Contact
 
-Your Name - [your.email@example.com](mailto:your.email@example.com)
+Your Name - [nameisrashad@gmail.com](mailto:nameisrashad@gmail.com)
 
-Project Link: [https://github.com/your-username/fintrack](https://github.com/your-username/fintrack)
+Project Link: [https://github.com/rashadamd/fintrack.git](https://github.com/rashadamd/fintrack.git)
 
 <!-- TODO: Replace the placeholder name, email, and project link with your own. -->
