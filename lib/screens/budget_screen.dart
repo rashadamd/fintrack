@@ -1,12 +1,12 @@
 // lib/screens/budget_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Import for input formatters
+import 'package:fintrack/constants/app_colors.dart';
 import 'package:fintrack/constants/categories.dart';
 import 'package:fintrack/models/budget.dart' as model;
 import 'package:fintrack/models/transaction.dart' as model_transaction;
 import 'package:fintrack/services/firestore_service.dart';
 import 'package:intl/intl.dart';
-
-import '../constants/app_colors.dart';
 
 class BudgetScreen extends StatefulWidget {
   const BudgetScreen({super.key});
@@ -19,6 +19,8 @@ class _BudgetScreenState extends State<BudgetScreen> {
   final FirestoreService _firestoreService = FirestoreService();
   String? _editingCategoryId;
   final TextEditingController _budgetController = TextEditingController();
+  // Create a new GlobalKey for the form
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void dispose() {
@@ -27,13 +29,22 @@ class _BudgetScreenState extends State<BudgetScreen> {
   }
 
   void _updateBudget(String categoryId) async {
-    final limit = double.tryParse(_budgetController.text) ?? 0.0;
-    showDialog(context: context, builder: (context) => const Center(child: CircularProgressIndicator()));
-    await _firestoreService.updateBudget(model.Budget(categoryId: categoryId, limit: limit));
-    if (mounted) Navigator.of(context).pop();
-    setState(() {
-      _editingCategoryId = null;
-    });
+    // Only proceed if the form is valid
+    if (_formKey.currentState!.validate()) {
+      final limit = double.tryParse(_budgetController.text) ?? 0.0;
+
+      showDialog(context: context, builder: (context) => const Center(child: CircularProgressIndicator()));
+
+      await _firestoreService.updateBudget(model.Budget(categoryId: categoryId, limit: limit));
+
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+
+      setState(() {
+        _editingCategoryId = null;
+      });
+    }
   }
 
   @override
@@ -55,9 +66,6 @@ class _BudgetScreenState extends State<BudgetScreen> {
           if (transactionSnapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (transactionSnapshot.hasError) {
-            return const Center(child: Text('Error fetching transactions.'));
-          }
           final transactions = transactionSnapshot.data ?? [];
 
           return StreamBuilder<List<model.Budget>>(
@@ -65,9 +73,6 @@ class _BudgetScreenState extends State<BudgetScreen> {
             builder: (context, budgetSnapshot) {
               if (budgetSnapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
-              }
-              if (budgetSnapshot.hasError) {
-                return const Center(child: Text('Error fetching budgets.'));
               }
               final budgets = budgetSnapshot.data ?? [];
 
@@ -83,17 +88,13 @@ class _BudgetScreenState extends State<BudgetScreen> {
                     orElse: () => model.Budget(categoryId: categoryId, limit: 0),
                   );
 
-                  final spent = transactions
-                      .where((t) => t.categoryId == categoryId && t.type == model_transaction.TransactionType.expense)
-                      .fold(0.0, (sum, t) => sum + t.amount);
-
                   final isEditing = _editingCategoryId == categoryId;
 
                   return Card(
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: isEditing
-                          ? _buildEditView(category)
+                          ? _buildEditView(category, isDarkMode)
                           : _buildDisplayView(context, category, budget, transactions, currencyFormat, secondaryTextColor),
                     ),
                   );
@@ -118,7 +119,6 @@ class _BudgetScreenState extends State<BudgetScreen> {
     );
   }
 
-
   Widget _buildBudgetItem(BuildContext context, model.Budget budget, List<model_transaction.Transaction> allTransactions, NumberFormat format, Color secondaryColor) {
     final category = categories[budget.categoryId]!;
     final spent = allTransactions
@@ -133,10 +133,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
           children: [
             Row(
               children: [
-                CircleAvatar(
-                  backgroundColor: category.color.withOpacity(0.2),
-                  child: Icon(category.icon, color: category.color, size: 20),
-                ),
+                CircleAvatar(backgroundColor: category.color.withOpacity(0.2), child: Icon(category.icon, color: category.color, size: 20)),
                 const SizedBox(width: 12),
                 Text(category.name, style: const TextStyle(fontWeight: FontWeight.bold)),
               ],
@@ -148,8 +145,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
         ClipRRect(
           borderRadius: BorderRadius.circular(10),
           child: LinearProgressIndicator(
-            value: percentage,
-            minHeight: 10,
+            value: percentage, minHeight: 10,
             backgroundColor: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.5),
             valueColor: AlwaysStoppedAnimation<Color>(category.color),
           ),
@@ -163,45 +159,70 @@ class _BudgetScreenState extends State<BudgetScreen> {
     );
   }
 
-  // Redesigned Edit View
-  Widget _buildEditView(Category category) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Set budget for ${category.name}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        const SizedBox(height: 16),
-        TextField(
-          controller: _budgetController,
-          keyboardType: const TextInputType.numberWithOptions(decimal: false),
-          autofocus: true,
-          decoration: InputDecoration(
-            prefixText: '\$ ',
-            labelText: 'Budget Limit',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+  Widget _buildEditView(Category category, bool isDarkMode) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Set budget for ${category.name}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _budgetController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: false),
+            autofocus: true,
+            // --- FIX #1: Add input formatter for character limit ---
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly, // Allow only numbers
+              LengthLimitingTextInputFormatter(6), // Limit to 6 digits (999999)
+            ],
+            decoration: InputDecoration(
+              prefixText: '\$ ',
+              hintText: 'Enter budget limit',
+              filled: true,
+              fillColor: isDarkMode ? Colors.white10 : Colors.black.withOpacity(0.05),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary)),
+            ),
+            // --- FIX #2: Add validation logic for amount limit ---
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                // Allow empty to mean "remove budget"
+                return null;
+              }
+              final amount = double.tryParse(value);
+              if (amount == null) {
+                return 'Invalid number';
+              }
+              if (amount > 999999) {
+                return 'Limit cannot exceed \$999,999.';
+              }
+              return null;
+            },
+            onFieldSubmitted: (_) => _updateBudget(category.id),
           ),
-          onSubmitted: (_) => _updateBudget(category.id),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            TextButton(
-              onPressed: () => setState(() => _editingCategoryId = null),
-              child: const Text('Cancel'),
-            ),
-            const SizedBox(width: 8),
-            ElevatedButton(
-              onPressed: () => _updateBudget(category.id),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () => setState(() => _editingCategoryId = null),
+                child: const Text('Cancel'),
               ),
-              child: const Text('Save'),
-            ),
-          ],
-        )
-      ],
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: () => _updateBudget(category.id),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                child: const Text('Save'),
+              ),
+            ],
+          )
+        ],
+      ),
     );
   }
 }

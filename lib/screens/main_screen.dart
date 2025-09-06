@@ -7,7 +7,7 @@ import 'package:fintrack/screens/dashboard_screen.dart';
 import 'package:fintrack/screens/reports_screen.dart';
 import 'package:fintrack/screens/transaction_history_screen.dart';
 // Import the new package
-import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
+import 'package:google_nav_bar/google_nav_bar.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -19,14 +19,6 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
   late final List<Widget> _widgetOptions;
-
-  // List of icons to display in the navigation bar
-  final List<IconData> _iconList = [
-    Icons.dashboard_outlined,
-    Icons.history_outlined,
-    Icons.pie_chart_outline,
-    Icons.bar_chart_outlined,
-  ];
 
   @override
   void initState() {
@@ -52,13 +44,13 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       body: _widgetOptions.elementAt(_selectedIndex),
 
-      // The FloatingActionButton remains the same
+      // FAB can float on top, no notch needed for this design
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           showModalBottomSheet(
             context: context,
             isScrollControlled: true,
-            backgroundColor: Colors.transparent, // Make sheet background transparent
+            backgroundColor: Colors.transparent,
             builder: (BuildContext context) => const AddTransactionScreen(),
           );
         },
@@ -68,22 +60,42 @@ class _MainScreenState extends State<MainScreen> {
         shape: const CircleBorder(),
         child: const Icon(Icons.add, size: 28),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
 
-      // This is the new, redesigned navigation bar
-      bottomNavigationBar: AnimatedBottomNavigationBar(
-        icons: _iconList,
-        activeIndex: _selectedIndex,
-        gapLocation: GapLocation.center,
-        notchSmoothness: NotchSmoothness.softEdge,
-        onTap: _onItemTapped,
-        // --- Styling to match our theme ---
-        backgroundColor: isDarkMode ? AppColors.darkCard : AppColors.lightCard,
-        activeColor: AppColors.primary,
-        inactiveColor: isDarkMode ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-        shadow: BoxShadow(
-          color: Colors.black.withOpacity(0.1),
-          blurRadius: 10,
+      bottomNavigationBar: Container(
+        // Add a subtle shadow and padding
+        decoration: BoxDecoration(
+          color: isDarkMode ? AppColors.darkCard : AppColors.lightCard,
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 20,
+              color: Colors.black.withOpacity(.1),
+            )
+          ],
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 8),
+            // This is the GNav widget
+            child: GNav(
+              rippleColor: AppColors.primary.withOpacity(0.2),
+              hoverColor: AppColors.primary.withOpacity(0.1),
+              gap: 8, // The gap between the icon and text
+              activeColor: Colors.white,
+              iconSize: 24,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              duration: const Duration(milliseconds: 400),
+              tabBackgroundColor: AppColors.primary, // The pill background color
+              color: isDarkMode ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+              tabs: const [
+                GButton(icon: Icons.dashboard_outlined, text: 'Dashboard'),
+                GButton(icon: Icons.history_outlined, text: 'History'),
+                GButton(icon: Icons.pie_chart_outline, text: 'Budgets'),
+                GButton(icon: Icons.bar_chart_outlined, text: 'Reports'),
+              ],
+              selectedIndex: _selectedIndex,
+              onTabChange: _onItemTapped,
+            ),
+          ),
         ),
       ),
     );

@@ -128,6 +128,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildHeader(BuildContext context, String userName, Color textColor) {
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Row(
       children: [
         Expanded(
@@ -141,9 +143,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         GestureDetector(
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen())),
-          child: const CircleAvatar(
+          child: CircleAvatar(
             radius: 25,
-            child: Icon(Icons.settings_rounded),
+            // Use a subtle background color that works in both themes
+            backgroundColor: isDarkMode ? AppColors.darkCard : Colors.white,
+            child: Icon(
+              Icons.settings_rounded, // A more modern, rounded icon
+              color: isDarkMode ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+            ),
           ),
         ),
       ],
