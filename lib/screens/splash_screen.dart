@@ -1,4 +1,3 @@
-// lib/screens/splash_screen.dart
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatelessWidget {
@@ -6,7 +5,6 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // We'll define these colors in our theme soon
     const Color primaryAccent = Color(0xFF00BFA5);
     const Color darkBackground = Color(0xFF1C1C23);
 
@@ -16,7 +14,6 @@ class SplashScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // A simple, modern logo icon
             Icon(
               Icons.track_changes_rounded,
               size: 100,

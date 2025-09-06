@@ -1,4 +1,3 @@
-// lib/screens/add_transaction_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fintrack/constants/app_colors.dart';
@@ -8,8 +7,7 @@ import 'package:fintrack/services/firestore_service.dart';
 import 'package:intl/intl.dart';
 
 class AddTransactionScreen extends StatefulWidget {
-  // Add an optional transaction parameter to the constructor.
-  // If a transaction is passed, the screen will be in "edit mode".
+
   final Transaction? transaction;
 
   const AddTransactionScreen({super.key, this.transaction});

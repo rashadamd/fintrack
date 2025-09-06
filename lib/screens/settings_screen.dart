@@ -1,4 +1,3 @@
-// lib/screens/settings_screen.dart
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fintrack/constants/app_colors.dart';
@@ -152,7 +151,6 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  // Helper widget for creating clean section headers
   Widget _buildSectionHeader(BuildContext context, String title) {
     final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Padding(

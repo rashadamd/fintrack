@@ -1,4 +1,3 @@
-// lib/screens/login_or_register.dart
 import 'package:flutter/material.dart';
 import 'package:fintrack/screens/login_screen.dart';
 import 'package:fintrack/screens/register_screen.dart';
@@ -14,7 +13,6 @@ class _LoginOrRegisterScreenState extends State<LoginOrRegisterScreen> {
   // Initially, show the login screen
   bool showLoginScreen = true;
 
-  // Toggle between login and register screens
   void toggleScreens() {
     setState(() {
       showLoginScreen = !showLoginScreen;

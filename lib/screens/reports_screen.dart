@@ -1,7 +1,5 @@
-// lib/screens/reports_screen.dart
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:fintrack/constants/app_colors.dart';
 import 'package:fintrack/constants/categories.dart';
 import 'package:fintrack/models/transaction.dart' as model;
 import 'package:fintrack/services/firestore_service.dart';

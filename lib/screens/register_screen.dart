@@ -25,7 +25,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       final userCredential = await _authService.signUpWithEmailAndPassword(email, password, name);
 
-      Navigator.of(context).pop(); // Close the loading indicator
+      Navigator.of(context).pop();
 
       if (userCredential == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -141,9 +141,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // Helper method to create styled InputDecoration for TextFormFields
   InputDecoration _buildInputDecoration({required String label, required IconData icon}) {
-    // This is the same helper method as in the Login screen
     const Color inputBackground = Color(0xFF2A2A35);
     const Color primaryText = Color(0xFFEAEAEB);
     const Color primaryAccent = Color(0xFF00BFA5);

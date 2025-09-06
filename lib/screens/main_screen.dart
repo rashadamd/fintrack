@@ -6,7 +6,6 @@ import 'package:fintrack/screens/budget_screen.dart';
 import 'package:fintrack/screens/dashboard_screen.dart';
 import 'package:fintrack/screens/reports_screen.dart';
 import 'package:fintrack/screens/transaction_history_screen.dart';
-// Import the new package
 import 'package:google_nav_bar/google_nav_bar.dart';
 
 class MainScreen extends StatefulWidget {
@@ -44,7 +43,6 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       body: _widgetOptions.elementAt(_selectedIndex),
 
-      // FAB can float on top, no notch needed for this design
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           showModalBottomSheet(
@@ -62,7 +60,6 @@ class _MainScreenState extends State<MainScreen> {
       ),
 
       bottomNavigationBar: Container(
-        // Add a subtle shadow and padding
         decoration: BoxDecoration(
           color: isDarkMode ? AppColors.darkCard : AppColors.lightCard,
           boxShadow: [
@@ -75,16 +72,15 @@ class _MainScreenState extends State<MainScreen> {
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 8),
-            // This is the GNav widget
             child: GNav(
               rippleColor: AppColors.primary.withOpacity(0.2),
               hoverColor: AppColors.primary.withOpacity(0.1),
-              gap: 8, // The gap between the icon and text
+              gap: 8,
               activeColor: Colors.white,
               iconSize: 24,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               duration: const Duration(milliseconds: 400),
-              tabBackgroundColor: AppColors.primary, // The pill background color
+              tabBackgroundColor: AppColors.primary,
               color: isDarkMode ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
               tabs: const [
                 GButton(icon: Icons.dashboard_outlined, text: 'Dashboard'),

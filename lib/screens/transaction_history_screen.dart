@@ -1,4 +1,3 @@
-// lib/screens/transaction_history_screen.dart
 import 'package:flutter/material.dart';
 import 'package:fintrack/constants/app_colors.dart';
 import 'package:fintrack/constants/categories.dart';
@@ -126,7 +125,6 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   }
 
   Widget _buildCategoryFilter() {
-    // We combine all categories for the filter
     final allCategoryIds = (incomeCategoryIds + expenseCategoryIds).toSet().toList();
 
     return SingleChildScrollView(

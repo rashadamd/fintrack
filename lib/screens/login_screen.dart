@@ -19,15 +19,13 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = _passwordController.text;
 
     if (email.isNotEmpty && password.isNotEmpty) {
-      // Show a loading indicator (optional but good practice)
       showDialog(context: context, builder: (context) => const Center(child: CircularProgressIndicator()));
 
       final userCredential = await _authService.signInWithEmailAndPassword(email, password);
 
-      Navigator.of(context).pop(); // Close the loading indicator
+      Navigator.of(context).pop();
 
       if (userCredential == null) {
-        // Show an error message
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Login failed. Please check your credentials.')),
         );

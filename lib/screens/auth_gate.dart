@@ -1,9 +1,8 @@
-// lib/screens/auth_gate.dart
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fintrack/screens/login_or_register.dart';
 import 'package:fintrack/screens/main_screen.dart';
-import 'package:fintrack/screens/splash_screen.dart'; // Import splash screen
+import 'package:fintrack/screens/splash_screen.dart';
 
 class AuthGate extends StatefulWidget {
   const AuthGate({super.key});

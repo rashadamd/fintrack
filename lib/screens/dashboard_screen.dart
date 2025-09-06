@@ -1,4 +1,3 @@
-// lib/screens/dashboard_screen.dart
 import 'package:flutter/material.dart';
 import 'package:fintrack/constants/app_colors.dart';
 import '../constants/categories.dart';
@@ -9,7 +8,6 @@ import 'package:fintrack/services/auth_service.dart';
 import 'package:fintrack/services/firestore_service.dart';
 import 'package:intl/intl.dart';
 
-// Helper class from previous version, remains the same
 class _DashboardBudgetView {
   final model_budget.Budget budget;
   final double spendingPercentage;
@@ -53,8 +51,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _buildMonthSelector(),
             Expanded(
               child: StreamBuilder<List<model.Transaction>>(
-                // --- THIS IS THE FIX ---
-                // We now provide the required 'month' parameter
                 stream: _firestoreService.getTransactions(month: _selectedMonth),
                 builder: (context, transactionSnapshot) {
                   if (transactionSnapshot.connectionState == ConnectionState.waiting) {
@@ -76,7 +72,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         return _buildEmptyDashboard(context);
                       }
 
-                      // All calculation logic remains the same
+                      //  calculation logic
                       final totalIncome = transactions.where((t) => t.type == model.TransactionType.income).fold(0.0, (sum, t) => sum + t.amount);
                       final totalExpense = transactions.where((t) => t.type == model.TransactionType.expense).fold(0.0, (sum, t) => sum + t.amount);
                       final balance = totalIncome - totalExpense;
@@ -117,7 +113,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // New month selector widget, consistent with other screens
   Widget _buildMonthSelector() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -140,8 +135,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
-
 
   Widget _buildHeader(BuildContext context, String userName, Color textColor) {
     final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
