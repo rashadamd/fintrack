@@ -1,6 +1,6 @@
 // lib/screens/budget_screen.dart
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Import for input formatters
+import 'package:flutter/services.dart';
 import 'package:fintrack/constants/app_colors.dart';
 import 'package:fintrack/constants/categories.dart';
 import 'package:fintrack/models/budget.dart' as model;
@@ -19,8 +19,8 @@ class _BudgetScreenState extends State<BudgetScreen> {
   final FirestoreService _firestoreService = FirestoreService();
   String? _editingCategoryId;
   final TextEditingController _budgetController = TextEditingController();
-  // Create a new GlobalKey for the form
   final _formKey = GlobalKey<FormState>();
+  DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
 
   @override
   void dispose() {
@@ -28,22 +28,19 @@ class _BudgetScreenState extends State<BudgetScreen> {
     super.dispose();
   }
 
+  void _changeMonth(int increment) {
+    setState(() {
+      _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + increment, 1);
+    });
+  }
+
   void _updateBudget(String categoryId) async {
-    // Only proceed if the form is valid
     if (_formKey.currentState!.validate()) {
       final limit = double.tryParse(_budgetController.text) ?? 0.0;
-
       showDialog(context: context, builder: (context) => const Center(child: CircularProgressIndicator()));
-
       await _firestoreService.updateBudget(model.Budget(categoryId: categoryId, limit: limit));
-
-      if (mounted) {
-        Navigator.of(context).pop();
-      }
-
-      setState(() {
-        _editingCategoryId = null;
-      });
+      if (mounted) Navigator.of(context).pop();
+      setState(() { _editingCategoryId = null; });
     }
   }
 
@@ -55,54 +52,79 @@ class _BudgetScreenState extends State<BudgetScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Budgets'),
+        title: const Text('Monthly Budgets'),
         centerTitle: true,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
       ),
-      body: StreamBuilder<List<model_transaction.Transaction>>(
-        stream: _firestoreService.getTransactions(),
-        builder: (context, transactionSnapshot) {
-          if (transactionSnapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final transactions = transactionSnapshot.data ?? [];
+      body: Column(
+        children: [
+          _buildMonthSelector(),
+          Expanded(
+            child: StreamBuilder<List<model_transaction.Transaction>>(
+              stream: _firestoreService.getTransactions(month: _selectedMonth),
+              builder: (context, transactionSnapshot) {
+                if (transactionSnapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                final transactions = transactionSnapshot.data ?? [];
 
-          return StreamBuilder<List<model.Budget>>(
-            stream: _firestoreService.getBudgets(),
-            builder: (context, budgetSnapshot) {
-              if (budgetSnapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              final budgets = budgetSnapshot.data ?? [];
+                return StreamBuilder<List<model.Budget>>(
+                  stream: _firestoreService.getBudgets(),
+                  builder: (context, budgetSnapshot) {
+                    if (budgetSnapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    final budgets = budgetSnapshot.data ?? [];
 
-              return ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                itemCount: expenseCategoryIds.length,
-                itemBuilder: (context, index) {
-                  final categoryId = expenseCategoryIds[index];
-                  final category = categories[categoryId]!;
+                    return ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      itemCount: expenseCategoryIds.length,
+                      itemBuilder: (context, index) {
+                        final categoryId = expenseCategoryIds[index];
+                        final category = categories[categoryId]!;
+                        final budget = budgets.firstWhere((b) => b.categoryId == categoryId, orElse: () => model.Budget(categoryId: categoryId, limit: 0));
+                        final isEditing = _editingCategoryId == categoryId;
 
-                  final budget = budgets.firstWhere(
-                        (b) => b.categoryId == categoryId,
-                    orElse: () => model.Budget(categoryId: categoryId, limit: 0),
-                  );
+                        return Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: isEditing
+                                ? _buildEditView(category, isDarkMode)
+                                : _buildDisplayView(context, category, budget, transactions, currencyFormat, secondaryTextColor),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-                  final isEditing = _editingCategoryId == categoryId;
-
-                  return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: isEditing
-                          ? _buildEditView(category, isDarkMode)
-                          : _buildDisplayView(context, category, budget, transactions, currencyFormat, secondaryTextColor),
-                    ),
-                  );
-                },
-              );
-            },
-          );
-        },
+  Widget _buildMonthSelector() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+            onPressed: () => _changeMonth(-1),
+          ),
+          Text(
+            DateFormat('MMMM yyyy').format(_selectedMonth),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          IconButton(
+            icon: const Icon(Icons.arrow_forward_ios_rounded, size: 20),
+            onPressed: () => _changeMonth(1),
+          ),
+        ],
       ),
     );
   }
@@ -171,11 +193,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
             controller: _budgetController,
             keyboardType: const TextInputType.numberWithOptions(decimal: false),
             autofocus: true,
-            // --- FIX #1: Add input formatter for character limit ---
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly, // Allow only numbers
-              LengthLimitingTextInputFormatter(6), // Limit to 6 digits (999999)
-            ],
+            inputFormatters: [ FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(6) ],
             decoration: InputDecoration(
               prefixText: '\$ ',
               hintText: 'Enter budget limit',
@@ -184,18 +202,11 @@ class _BudgetScreenState extends State<BudgetScreen> {
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
               focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary)),
             ),
-            // --- FIX #2: Add validation logic for amount limit ---
             validator: (value) {
-              if (value == null || value.isEmpty) {
-                // Allow empty to mean "remove budget"
-                return null;
-              }
-              final amount = double.tryParse(value);
-              if (amount == null) {
-                return 'Invalid number';
-              }
-              if (amount > 999999) {
-                return 'Limit cannot exceed \$999,999.';
+              if (value != null && value.isNotEmpty) {
+                final amount = double.tryParse(value);
+                if (amount == null) return 'Invalid number';
+                if (amount > 999999) return 'Limit cannot exceed \$999,999.';
               }
               return null;
             },
@@ -205,10 +216,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              TextButton(
-                onPressed: () => setState(() => _editingCategoryId = null),
-                child: const Text('Cancel'),
-              ),
+              TextButton(onPressed: () => setState(() => _editingCategoryId = null), child: const Text('Cancel')),
               const SizedBox(width: 8),
               ElevatedButton(
                 onPressed: () => _updateBudget(category.id),

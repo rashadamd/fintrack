@@ -43,6 +43,7 @@ dependencies:
   animated_bottom_navigation_bar: ^1.4.0
   convex_bottom_bar: ^3.2.0
   google_nav_bar: ^5.0.7
+  fl_chart: 0.66.2
 
 dev_dependencies:
   flutter_test:

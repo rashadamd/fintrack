@@ -1,15 +1,15 @@
 // lib/screens/dashboard_screen.dart
 import 'package:flutter/material.dart';
-import 'package:fintrack/constants/categories.dart';
+import 'package:fintrack/constants/app_colors.dart';
+import '../constants/categories.dart';
 import 'package:fintrack/models/transaction.dart' as model;
-import 'package:fintrack/models/budget.dart' as model_budget; // We'll add this later
+import 'package:fintrack/models/budget.dart' as model_budget;
 import 'package:fintrack/screens/settings_screen.dart';
 import 'package:fintrack/services/auth_service.dart';
 import 'package:fintrack/services/firestore_service.dart';
 import 'package:intl/intl.dart';
 
-import '../constants/app_colors.dart';
-
+// Helper class from previous version, remains the same
 class _DashboardBudgetView {
   final model_budget.Budget budget;
   final double spendingPercentage;
@@ -21,7 +21,6 @@ class DashboardScreen extends StatefulWidget {
   final void Function(int) onNavigate;
   const DashboardScreen({super.key, required this.onNavigate});
 
-
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
@@ -29,103 +28,120 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   final FirestoreService _firestoreService = FirestoreService();
   final AuthService _authService = AuthService();
+  // State variable to track the selected month
+  DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
 
+  // Method to change the month
+  void _changeMonth(int increment) {
+    setState(() {
+      _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + increment, 1);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final Color primaryTextColor = isDarkMode ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final Color secondaryTextColor = isDarkMode ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
     return Scaffold(
       body: SafeArea(
-        child: StreamBuilder<List<model.Transaction>>(
-          stream: _firestoreService.getTransactions(),
-          builder: (context, transactionSnapshot) {
-            if (transactionSnapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (transactionSnapshot.hasError) {
-              return Center(child: Text('Error: ${transactionSnapshot.error}'));
-            }
-        
-            final transactions = transactionSnapshot.data ?? [];
-        
-            return StreamBuilder<List<model_budget.Budget>>(
-              stream: _firestoreService.getBudgets(),
-              builder: (context, budgetSnapshot) {
-                if (budgetSnapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (budgetSnapshot.hasError) {
-                  return Center(child: Text('Error: ${budgetSnapshot.error}'));
-                }
-        
-                final budgets = budgetSnapshot.data ?? [];
-        
-                if (transactions.isEmpty) {
-                  return _buildEmptyDashboard(context);
-                }
-        
-                // --- Calculations ---
-                final totalIncome = transactions
-                    .where((t) => t.type == model.TransactionType.income)
-                    .fold(0.0, (sum, t) => sum + t.amount);
-                final totalExpense = transactions
-                    .where((t) => t.type == model.TransactionType.expense)
-                    .fold(0.0, (sum, t) => sum + t.amount);
-                final balance = totalIncome - totalExpense;
-                final currencyFormat = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
-        
-                // --- CHANGE #1: Limit recent transactions to 3 ---
-                // Firestore already sorts by date, so we just take the first 3.
-                final recentTransactions = transactions.take(3).toList();
-        
-                // --- CHANGE #2: Prioritize and limit budgets ---
-                final List<_DashboardBudgetView> dashboardBudgets = budgets.map((budget) {
-                  final spent = transactions
-                      .where((t) => t.categoryId == budget.categoryId && t.type == model.TransactionType.expense)
-                      .fold(0.0, (sum, t) => sum + t.amount);
-        
-                  // Calculate spending percentage, handling division by zero.
-                  final percentage = (budget.limit > 0) ? (spent / budget.limit) : 0.0;
-        
-                  return _DashboardBudgetView(budget: budget, spendingPercentage: percentage);
-                }).toList();
-        
-                // Sort the list to show the budgets with the highest spending percentage first.
-                dashboardBudgets.sort((a, b) => b.spendingPercentage.compareTo(a.spendingPercentage));
-        
-                // Take only the top 3 budgets.
-                final topBudgets = dashboardBudgets.take(3).toList();
-        
-        
-                // --- UI Structure ---
-                return ListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  children: [
-                    const SizedBox(height: 16),
-                    _buildHeader(context, _authService.currentUser?.displayName ?? "User", primaryTextColor),
-                    const SizedBox(height: 24),
-                    _buildBalanceCard(context, currencyFormat, balance, totalIncome, totalExpense),
-                    const SizedBox(height: 24),
-                    _buildSectionHeader(context, 'Recent Transactions', 'View All', () => widget.onNavigate(1), primaryTextColor),
-                    ...recentTransactions.map((t) => _buildTransactionItem(context, t, currencyFormat, secondaryTextColor)),
-                    const SizedBox(height: 24),
-                    _buildSectionHeader(context, 'Budgets', 'Manage', () => widget.onNavigate(2), primaryTextColor),
-                    if (topBudgets.isEmpty)
-                      const Card(child: Padding(padding: EdgeInsets.all(24), child: Center(child: Text("No budgets set."))))
-                    else
-                      ...topBudgets.map((db) => _buildBudgetItem(context, db.budget, transactions, currencyFormat, secondaryTextColor)),
-                    const SizedBox(height: 80), // Space for FAB
-                  ],
-                );              },
-            );
-          },
+        child: Column(
+          children: [
+            const SizedBox(height: 16),
+            _buildHeader(context, _authService.currentUser?.displayName ?? "User", primaryTextColor),
+            const SizedBox(height: 16),
+            _buildMonthSelector(),
+            Expanded(
+              child: StreamBuilder<List<model.Transaction>>(
+                // --- THIS IS THE FIX ---
+                // We now provide the required 'month' parameter
+                stream: _firestoreService.getTransactions(month: _selectedMonth),
+                builder: (context, transactionSnapshot) {
+                  if (transactionSnapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  final transactions = transactionSnapshot.data ?? [];
+
+                  return StreamBuilder<List<model_budget.Budget>>(
+                    stream: _firestoreService.getBudgets(),
+                    builder: (context, budgetSnapshot) {
+                      if (budgetSnapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      final budgets = budgetSnapshot.data ?? [];
+
+                      if (transactions.isEmpty) {
+                        return _buildEmptyDashboard(context);
+                      }
+
+                      // All calculation logic remains the same
+                      final totalIncome = transactions.where((t) => t.type == model.TransactionType.income).fold(0.0, (sum, t) => sum + t.amount);
+                      final totalExpense = transactions.where((t) => t.type == model.TransactionType.expense).fold(0.0, (sum, t) => sum + t.amount);
+                      final balance = totalIncome - totalExpense;
+                      final currencyFormat = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
+                      final recentTransactions = transactions.take(3).toList();
+
+                      final List<_DashboardBudgetView> dashboardBudgets = budgets.map((budget) {
+                        final spent = transactions.where((t) => t.categoryId == budget.categoryId && t.type == model.TransactionType.expense).fold(0.0, (sum, t) => sum + t.amount);
+                        final percentage = (budget.limit > 0) ? (spent / budget.limit) : 0.0;
+                        return _DashboardBudgetView(budget: budget, spendingPercentage: percentage);
+                      }).toList();
+                      dashboardBudgets.sort((a, b) => b.spendingPercentage.compareTo(a.spendingPercentage));
+                      final topBudgets = dashboardBudgets.take(3).toList();
+
+                      return ListView(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        children: [
+                          _buildBalanceCard(context, currencyFormat, balance, totalIncome, totalExpense),
+                          const SizedBox(height: 24),
+                          _buildSectionHeader(context, 'Recent Transactions', 'View All', () => widget.onNavigate(1), primaryTextColor),
+                          ...recentTransactions.map((t) => _buildTransactionItem(context, t, currencyFormat,primaryTextColor)),
+                          const SizedBox(height: 24),
+                          _buildSectionHeader(context, 'Budgets', 'Manage', () => widget.onNavigate(2), primaryTextColor),
+                          if (topBudgets.isEmpty)
+                            const Card(child: Padding(padding: EdgeInsets.all(24), child: Center(child: Text("No budgets set."))))
+                          else
+                          ...topBudgets.map((db) => _buildBudgetItem(context, db.budget, transactions, currencyFormat, primaryTextColor)),                          const SizedBox(height: 80),
+                        ],
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
+
+  // New month selector widget, consistent with other screens
+  Widget _buildMonthSelector() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+            onPressed: () => _changeMonth(-1),
+          ),
+          Text(
+            DateFormat('MMMM yyyy').format(_selectedMonth),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          IconButton(
+            icon: const Icon(Icons.arrow_forward_ios_rounded, size: 20),
+            onPressed: () => _changeMonth(1),
+          ),
+        ],
+      ),
+    );
+  }
+
+
 
   Widget _buildHeader(BuildContext context, String userName, Color textColor) {
     final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -278,23 +294,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildEmptyDashboard(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16.0),
-      children: [
-        _buildHeader(context, _authService.currentUser?.displayName ?? "User", Theme.of(context).brightness == Brightness.dark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),        const SizedBox(height: 24),
-        const Card(
-          child: Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(
-              child: Text(
-                'Welcome! Add your first transaction by tapping the "+" button below.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16),
-              ),
-            ),
-          ),
+    // This is a simplified version for when the ListView is removed
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Text(
+          'No transactions for this month. Tap the "+" button to get started!',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 16),
         ),
-      ],
+      ),
     );
   }
-  }
+}
