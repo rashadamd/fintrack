@@ -159,7 +159,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## Contact
 
-Your Name - [nameisrashad@gmail.com](mailto:nameisrashad@gmail.com)
+Rashad Ahamed - [nameisrashad@gmail.com](mailto:nameisrashad@gmail.com)
 
 Project Link: [https://github.com/rashadamd/fintrack.git](https://github.com/rashadamd/fintrack.git)
 
