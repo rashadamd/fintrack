@@ -2,6 +2,7 @@
 
 A modern, intuitive, and cross-platform personal finance tracker built with Flutter and Firebase. FinTrack empowers users to take control of their financial life with a clean interface, real-time data synchronization, and powerful insights.
 
+![FinTrack App Banner](ReadAsset/system.gif)
 ---
 
 ## Table of Contents
@@ -159,7 +160,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## Contact
 
-Rashad Ahamed - [nameisrashad@gmail.com](mailto:nameisrashad@gmail.com)
+Your Name - [nameisrashad@gmail.com](mailto:nameisrashad@gmail.com)
 
 Project Link: [https://github.com/rashadamd/fintrack.git](https://github.com/rashadamd/fintrack.git)
 
