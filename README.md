@@ -3,7 +3,7 @@
 A modern, intuitive, and cross-platform personal finance tracker built with Flutter and Firebase. FinTrack empowers users to take control of their financial life with a clean interface, real-time data synchronization, and powerful insights.
 
 <!-- TODO: Add a high-quality GIF or banner image of the app in action. A screen recording of the app's core loop (Dashboard -> Add Transaction -> See Update) is highly effective. -->
-![FinTrack App Banner](ReadAsset/vid.mov)
+![FinTrack App Banner](ReadAsset/vid.mp4)
 
 ---
 
@@ -51,13 +51,13 @@ The core design philosophy is centered around clarity and intuition, helping use
 
 <!-- TODO: Replace the placeholder links below with links to your actual screenshots. You can upload them to the "issues" section of your GitHub repo to get a link, or use a service like Imgur. -->
 
-| Onboarding (Splash & Auth)        | Dashboard (Light & Dark)        | Add Transaction                  |
-| --------------------------------- | ------------------------------- | -------------------------------- |
-| ![Auth Screens](link-to-auth.png) | ![Dashboard](link-to-dashboard.png) | ![Add Transaction](link-to-add.png) |
+| Onboarding (Auth)                 | Dashboard (Light & Dark)              | Add Transaction                       |
+|-----------------------------------|---------------------------------------|---------------------------------------|
+| ![Auth Screens](ReadAsset/auth.jpg) | ![Dashboard](ReadAsset/dashboard.jpg) | ![Add Transaction](ReadAsset/add.png) |
 
-| Transaction History & Filters     | Monthly Budgets                 | Reports & Charts                 |
-| --------------------------------- | ------------------------------- | -------------------------------- |
-| ![History](link-to-history.png)   | ![Budgets](link-to-budgets.png)   | ![Reports](link-to-reports.png)   |
+| Transaction History & Filters          | Monthly Budgets                   | Reports & Charts                  |
+|----------------------------------------|-----------------------------------|-----------------------------------|
+| ![History](ReadAsset/transactions.png) | ![Budgets](ReadAsset/budgets.png) | ![Reports](ReadAsset/reports.png) |
 
 ---
 
