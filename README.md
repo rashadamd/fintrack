@@ -2,9 +2,6 @@
 
 A modern, intuitive, and cross-platform personal finance tracker built with Flutter and Firebase. FinTrack empowers users to take control of their financial life with a clean interface, real-time data synchronization, and powerful insights.
 
-<!-- TODO: Add a high-quality GIF or banner image of the app in action. A screen recording of the app's core loop (Dashboard -> Add Transaction -> See Update) is highly effective. -->
-![FinTrack App Banner](ReadAsset/vid.mp4)
-
 ---
 
 ## Table of Contents
