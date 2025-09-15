@@ -1,3 +1,4 @@
+// lib/screens/add_transaction_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fintrack/constants/app_colors.dart';
@@ -7,9 +8,7 @@ import 'package:fintrack/services/firestore_service.dart';
 import 'package:intl/intl.dart';
 
 class AddTransactionScreen extends StatefulWidget {
-
   final Transaction? transaction;
-
   const AddTransactionScreen({super.key, this.transaction});
 
   @override
@@ -30,11 +29,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   @override
   void initState() {
     super.initState();
-    // Check if we are in edit mode by seeing if a transaction was passed.
     _isEditMode = widget.transaction != null;
-
     if (_isEditMode) {
-      // If editing, pre-fill all the fields with the existing data.
       final t = widget.transaction!;
       _selectedType = t.type;
       _selectedCategoryId = t.categoryId;
@@ -42,7 +38,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       _descriptionController.text = t.description;
       _amountController.text = t.amount.toStringAsFixed(2);
     } else {
-      // If adding a new transaction, set the default values.
       _selectedType = TransactionType.expense;
       _selectedCategoryId = allExpenseCategoryIds.first;
       _selectedDate = DateTime.now();
@@ -76,8 +71,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       builder: (context) {
         return GridView.builder(
           padding: const EdgeInsets.all(16),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 90,
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
           ),
@@ -101,10 +96,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     child: Icon(category.icon, color: category.color),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    category.name,
-                    style: const TextStyle(fontSize: 12),
-                    textAlign: TextAlign.center,
+
+                  // --- THIS IS THE FIX ---
+                  // Expanded tells the Column to give this Text widget all the remaining
+                  // vertical space, preventing it from overflowing.
+                  Expanded(
+                    child: Text(
+                      category.name,
+                      style: const TextStyle(fontSize: 12),
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2, // Also good practice to limit lines
+                    ),
                   ),
                 ],
               ),
@@ -117,6 +120,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // The build method is unchanged.
     final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final availableCategories = _selectedType == TransactionType.income
         ? incomeCategoryIds

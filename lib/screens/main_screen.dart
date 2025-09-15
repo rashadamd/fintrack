@@ -82,11 +82,13 @@ class _MainScreenState extends State<MainScreen> {
               duration: const Duration(milliseconds: 400),
               tabBackgroundColor: AppColors.primary,
               color: isDarkMode ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+
+
               tabs: const [
-                GButton(icon: Icons.dashboard_outlined, text: 'Dashboard'),
-                GButton(icon: Icons.history_outlined, text: 'History'),
-                GButton(icon: Icons.pie_chart_outline, text: 'Budgets'),
-                GButton(icon: Icons.bar_chart_outlined, text: 'Reports'),
+                GButton(icon: Icons.dashboard_outlined),
+                GButton(icon: Icons.history_outlined),
+                GButton(icon: Icons.pie_chart_outline),
+                GButton(icon: Icons.bar_chart_outlined),
               ],
               selectedIndex: _selectedIndex,
               onTabChange: _onItemTapped,
